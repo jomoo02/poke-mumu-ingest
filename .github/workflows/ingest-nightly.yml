@@ -1,9 +1,9 @@
-# 매일 새벽 4시(한국 시간) 포켓몬 데이터 수집
+# 매일 새벽 4시(한국 시간) Showdown(Champions) 데이터 수집
 #
+# - Bulbapedia는 GitHub Actions 서버 접속을 막아서(403) Mac에서 따로 돌린다: scripts/local/README.md
 # - ingest_bot(public 읽기 전용)으로만 접속한다. 원문은 ingest.snapshot, 제안은 ingest.move_proposal에만 쓴다.
 # - public 반영은 하지 않는다. 제안은 직접 확인·승인한 뒤 반영한다.
 # - 한국어 효과 문구 제안은 이 워크플로가 끝난 뒤 Claude 예약 작업(04:40)이 만든다.
-# - 수치 이력(--phase=history)은 수치 제안을 반영한 뒤에만 정확하므로 여기서 돌리지 않는다.
 #
 # 필요한 저장소 Secrets: INGEST_DB_HOST, INGEST_DB_PASSWORD
 # 수동 실행: Actions 탭 > ingest-nightly > Run workflow
@@ -27,35 +27,6 @@ env:
   INGEST_DB_PASSWORD: ${{ secrets.INGEST_DB_PASSWORD }}
 
 jobs:
-  bulbapedia:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-
-      # 판 번호만 먼저 묻고, 바뀐 기술 문서만 원문을 받는다
-      - name: 기술 문서 수집 (바뀐 문서만)
-        run: node scripts/ingest/fetch-move-snapshot.mts --changed-only
-
-      # 앞 단계가 실패해도 나머지는 따로 돌린다 (job은 실패로 표시되어 메일이 온다)
-      - name: 사용 가능 표 수집
-        if: ${{ !cancelled() }}
-        run: node scripts/ingest/fetch-availability-snapshot.mts
-
-      - name: 기술 수치 제안
-        if: ${{ !cancelled() }}
-        run: node scripts/ingest/generate-bulbapedia-move-proposals.mts --phase=values
-
-      - name: 사용 가능 여부 제안
-        if: ${{ !cancelled() }}
-        run: node scripts/ingest/generate-availability-proposals.mts
-
   showdown:
     runs-on: ubuntu-latest
     timeout-minutes: 30

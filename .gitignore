@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Mac 자동 수집 상태·로그 (scripts/local)
+.local-state/
