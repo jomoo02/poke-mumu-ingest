@@ -227,10 +227,16 @@ export const buildValueProposals = (snapshots: ParsedSnapshot[], db: DbState): V
         champ != null &&
         (key === 'power' || key === 'accuracy') &&
         sameValue(key, mainValue, champ[key]);
+      // move는 본편 최신 행(사용 불가 포함)의 값이다. 레츠고 전용 기술처럼 최신 행이
+      // 사용 불가여도 move와 같은 값을 갖고 있으면, Bulbapedia가 다른 버전 값을 보여주는 것으로 본다
+      const latestAny = rows.at(-1);
       const showsOtherVersion =
-        latest != null &&
-        sameValue(key, move[col], latest[col]) &&
-        rows.some((r) => r !== latest && sameValue(key, mainValue, r[col]));
+        [latest, latestAny].some(
+          (base) =>
+            base != null &&
+            sameValue(key, move[col], base[col]) &&
+            rows.some((r) => r !== base && sameValue(key, mainValue, r[col])),
+        );
 
       // A. move
       if (!sameValue(key, mainValue, move[col])) {
